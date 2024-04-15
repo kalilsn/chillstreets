@@ -1,0 +1,23 @@
+version: "3"
+services:
+  pgrouting:
+    platform: linux/amd64
+    build: .
+    image: pgrouting
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./:/app
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - PGHOST=localhost
+      - PGPORT=5432
+      - PGUSER=chillstreets
+      - POSTGRES_USER=chillstreets
+      - POSTGRES_PASSWORD=password
+      - PGPASSWORD=password
+      - POSTGRES_DB=chillstreets
+      - PGDATABASE=chillstreets
+
+volumes:
+  db-data:
