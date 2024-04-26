@@ -4,8 +4,8 @@ all: pgrouting/chicago.table
 pgrouting/chicago.table: pgrouting/chicago-filtered.osm
 	cat pgrouting/migrations/*.sql | psql -1 -f - && \
 	osm2pgrouting -f $< -c /usr/share/osm2pgrouting/mapconfig_for_bicycles.xml \
-	              --prefix chicago_ --addnodes --tags --clean \
-	              -d "${PGDATABASE}" -U "${PGUSER}" -h "${PGHOST}" -W "${PGPASSWORD}" && \
+		--prefix chicago_ --addnodes --tags --clean -d "${PGDATABASE}" -U "${PGUSER}" \
+		-W "${PGPASSWORD}" && \
 	psql -c " \
 		UPDATE chicago_ways SET one_way = 2, oneway = 'NO', reverse_cost = cost \
 		FROM osm_ways \
