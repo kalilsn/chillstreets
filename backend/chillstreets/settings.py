@@ -24,11 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY = env.str("SECRET_KEY", "whatever")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+DEBUG = env.bool("DEBUG", default=True)
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 # Application definition
 
@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
+    'django.contrib.gis',
+    'chillstreets'
 ]
 
 MIDDLEWARE = [
@@ -74,21 +77,15 @@ WSGI_APPLICATION = 'chillstreets.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
+# Defaults are set here to enable using manage.py outside of docker in dev
 DATABASES = {
     "default": {
-        'ENGINE': 'django.db.backends.postgresql',
-        "NAME": env.str("POSTGRES_DB"),
-        "USER": env.str("POSTGRES_USER"),
-        "PASSWORD": env.str("POSTGRES_PASSWORD"),
-        "HOST": env.str("POSTGRES_HOST"),
-        "PORT": env.str("POSTGRES_PORT"),
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        "NAME": env.str("POSTGRES_DB", default="chillstreets"),
+        "USER": env.str("POSTGRES_USER", default="chillstreets"),
+        "PASSWORD": env.str("POSTGRES_PASSWORD", default="password"),
+        "HOST": env.str("POSTGRES_HOST", default="localhost"),
+        "PORT": env.str("POSTGRES_PORT", default="5432"),
     }
 }
 
