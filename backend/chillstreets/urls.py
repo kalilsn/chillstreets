@@ -27,6 +27,10 @@ async def snap(request, source: str, dest: str):
     # return ways
     return {}
 
+@api.get("/health")
+async def health(request):
+    return "👍"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", api.urls),
