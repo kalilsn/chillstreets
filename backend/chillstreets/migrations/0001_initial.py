@@ -4,6 +4,7 @@ import django.contrib.gis.db.models.fields
 import django.contrib.postgres.fields
 import django.contrib.postgres.fields.hstore
 from django.db import migrations, models
+from django.contrib.postgres.operations import HStoreExtension, CreateExtension
 
 
 class Migration(migrations.Migration):
@@ -14,6 +15,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        HStoreExtension(),
+        CreateExtension('postgis'),
+        CreateExtension('pgrouting'),
         migrations.CreateModel(
             name='Edge',
             fields=[
