@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-openapi-schema": "pushd .. && docker compose run backend uv run python manage.py export_openapi_schema > frontend/openapi-schema.json && popd",
+    "generate-api-client": "npm run generate-openapi-schema && openapi-ts"
   },
   "dependencies": {
     "maplibre-gl": "^5.6.0",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@hey-api/openapi-ts": "^0.78.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
