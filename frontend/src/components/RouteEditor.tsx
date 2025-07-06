@@ -24,6 +24,12 @@ function RouteEditor() {
             modes: [
               new TerraDrawLineStringMode({}),
               new TerraDrawSelectMode({
+                keyEvents: {
+                  delete: "Backspace",
+                  deselect: "Esc",
+                  rotate: null,
+                  scale: null,
+                },
                 flags: {
                   linestring: {
                     feature: {

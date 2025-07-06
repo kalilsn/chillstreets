@@ -20,6 +20,7 @@ function ControlPanel({ routes, changeMode }: Props) {
 
   return (
     <div className="control-panel">
+      <p>Right click to delete a coordinate</p>
       <ToggleGroup
         id={toggleGroupId}
         type="single"
