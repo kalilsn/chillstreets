@@ -1,82 +1,95 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useMap } from "react-map-gl/maplibre";
-import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
-import {
-  TerraDraw,
-  TerraDrawLineStringMode,
-  TerraDrawSelectMode,
-  type GeoJSONStoreFeatures,
-} from "terra-draw";
+import { useCallback, useEffect, useState } from "react";
+import { TerraDraw } from "terra-draw";
 
 import ControlPanel from "./ControlPanel";
+import type { FeatureId } from "node_modules/terra-draw/dist/store/store";
+import { chillstreetsUrlsSave } from "@/lib/api-client";
+import type { OnChangeContext } from "node_modules/terra-draw/dist/common";
+type TerraDrawChangeType = "create" | "update" | "delete" | "styling";
 
-function RouteEditor() {
-  const { current: map } = useMap();
-  const draw = useRef<TerraDraw | null>(null);
-  const [routes, setRoutes] = useState<GeoJSONStoreFeatures[]>([]);
+function RouteEditor({ draw }: { draw: TerraDraw }) {
+  const [updated, setUpdated] = useState<FeatureId[]>([]);
+  const [deleted, setDeleted] = useState<FeatureId[]>([]);
+
+  const handleChange = useCallback(
+    (ids: FeatureId[], type: TerraDrawChangeType, context: OnChangeContext) => {
+      if (context && context.origin === "api") {
+        // Ignore programmatic changes to data (such as adding the initial routes)
+        return;
+      }
+      if (type === "create" || type === "update") {
+        // Filter for uniqueness and to make sure deleted features aren't added to the updates array
+        setUpdated((updated) => [
+          ...updated,
+          ...ids.filter((id) => ![...updated, ...deleted].includes(id)),
+        ]);
+      }
+      if (type === "delete") {
+        setDeleted((deleted) => [
+          ...deleted,
+          ...ids.filter((id) => !deleted.includes(id)),
+        ]);
+        // Remove any newly deleted features from the updates array
+        setUpdated((updated) => updated.filter((id) => !ids.includes(id)));
+      }
+    },
+    [deleted]
+  );
 
   useEffect(() => {
-    if (map) {
-      map.on("style.load", () => {
-        if (!draw.current) {
-          draw.current = new TerraDraw({
-            adapter: new TerraDrawMapLibreGLAdapter({ map: map.getMap() }),
-            modes: [
-              new TerraDrawLineStringMode({}),
-              new TerraDrawSelectMode({
-                keyEvents: {
-                  delete: "Backspace",
-                  deselect: "Esc",
-                  rotate: null,
-                  scale: null,
-                },
-                flags: {
-                  linestring: {
-                    feature: {
-                      draggable: true,
-                      coordinates: {
-                        midpoints: false,
-                        draggable: true,
-                        deletable: true,
-                      },
-                    },
-                  },
-                },
-              }),
-            ],
-          });
-
-          console.log("Starting TerraDraw");
-          draw.current.start();
-          draw.current.setMode("linestring");
-          draw.current.on("change", () => {
-            const snapshot = draw.current?.getSnapshot();
-            if (snapshot) {
-              setRoutes(snapshot);
-            }
-          });
-        }
-      });
+    if (draw) {
+      // @ts-expect-error the library's FeatureId type is broader than needed
+      draw.on("change", handleChange);
     }
-
     return () => {
-      console.log("Stopping TerraDraw");
-      draw.current?.stop();
+      if (draw) {
+        // @ts-expect-error the library's FeatureId type is broader than needed
+        draw.off("change", handleChange);
+      }
     };
-  }, [map, draw]);
+  }, [draw, handleChange]);
 
   const changeMode = useCallback(
     (mode: "linestring" | "select") => {
-      if (draw.current) {
-        draw.current.setMode(mode);
+      if (draw) {
+        draw.setMode(mode);
       }
     },
     [draw]
   );
 
+  const save = useCallback(async () => {
+    if (!draw) {
+      return;
+    }
+    const hydratedUpdates: Record<string, string> = {};
+    for (const featureId of updated) {
+      const snapshot = draw.getSnapshotFeature(featureId);
+      if (snapshot) {
+        console.log("snapshot", snapshot);
+        hydratedUpdates[featureId] = JSON.stringify(snapshot.geometry);
+      }
+    }
+
+    console.log("saving changes: ", {
+      updated,
+      deleted,
+    });
+
+    await chillstreetsUrlsSave({
+      // @ts-expect-error FeatureId issue once again. It's a string!
+      body: { updated: hydratedUpdates, deleted },
+      baseUrl: "http://localhost:8000",
+    });
+
+    // Clear out the state
+    setUpdated([]);
+    setDeleted([]);
+  }, [draw, updated, deleted]);
+
   return (
     <>
-      <ControlPanel routes={routes} changeMode={changeMode} />
+      <ControlPanel changeMode={changeMode} save={save} />
     </>
   );
 }

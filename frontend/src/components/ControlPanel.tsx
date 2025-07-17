@@ -1,22 +1,17 @@
-import { memo, useCallback, useId, useState } from "react";
-import type { GeoJSONStoreFeatures } from "terra-draw";
+import { memo, useId, useState } from "react";
 import { Button } from "./ui/button";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
 type Mode = "linestring" | "select";
 
 type Props = {
-  routes: GeoJSONStoreFeatures[];
+  save: () => Promise<void>;
   changeMode: (mode: Mode) => void;
 };
 
-function ControlPanel({ routes, changeMode }: Props) {
+function ControlPanel({ changeMode, save }: Props) {
   const [mode, setMode] = useState<Mode>("linestring");
   const toggleGroupId = useId();
-
-  const save = useCallback(async () => {
-    console.log("saving routes: ", routes);
-  }, [routes]);
 
   return (
     <div className="control-panel">

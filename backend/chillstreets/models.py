@@ -3,11 +3,13 @@ import json
 from django.db import models, connection
 from django.contrib.postgres import fields as pg_models
 from django.contrib.gis.db import models as gis_models
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 
 class Edge(models.Model):
     """
-    Unmanaged model corresponding to an edge stored in the edgelist. Edges are
+    Model corresponding to an edge stored in the edgelist. Edges are
     what we use to calculate routes, and are comprised of segments of OSM Ways
     that have been split at nodes and intersections.
     """
@@ -58,6 +60,37 @@ class Way(models.Model):
     class Meta:
         managed = True
         db_table = 'osm_ways'
+
+class UserRoute(models.Model):
+    id = models.UUIDField(primary_key=True)
+    original_geometry = gis_models.LineStringField()
+    snapped_geometry = gis_models.LineStringField()
+    class Meta:
+        managed = True
+        db_table = 'user_routes'
+
+    @classmethod
+    def upsert_routes(cls, routes: list[tuple[str, str]]):
+        snapped_routes = [(route[0], route[1], route[1]) for route in routes]
+        with connection.cursor() as cursor:
+            cursor.executemany("""
+                INSERT INTO "user_routes" ("id", "original_geometry", "snapped_geometry")
+                VALUES (%s, ST_GeomFromGeoJSON(%s), ST_GeomFromGeoJSON(%s))
+                ON CONFLICT ("id") DO UPDATE
+                SET original_geometry = EXCLUDED."original_geometry"
+            """, snapped_routes)
+            return 200
+
+    @classmethod
+    def get_routes(cls):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, ST_AsGeoJson(original_geometry) as geometry
+                FROM "user_routes"
+            """)
+
+            rows = fetchall(cursor)
+            return json.dumps(rows, cls=DjangoJSONEncoder)
 
 
 class MellowRoute(models.Model):
