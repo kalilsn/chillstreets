@@ -73,8 +73,8 @@ class UserRoute(models.Model):
     def upsert_routes(cls, routes: list[tuple[str, str]]):
         snapped_routes = [(route[0], route[1], route[1]) for route in routes]
         with connection.cursor() as cursor:
-            cursor.executemany("""
-                INSERT INTO "user_routes" ("id", "original_geometry", "snapped_geometry")
+            cursor.executemany(f"""
+                INSERT INTO "{cls._meta.db_table}" ("id", "original_geometry", "snapped_geometry")
                 VALUES (%s, ST_GeomFromGeoJSON(%s), ST_GeomFromGeoJSON(%s))
                 ON CONFLICT ("id") DO UPDATE
                 SET original_geometry = EXCLUDED."original_geometry"
