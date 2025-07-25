@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import {
   TerraDraw,
   TerraDrawLineStringMode,
+  TerraDrawRenderMode,
   TerraDrawSelectMode,
   type GeoJSONStoreFeatures,
 } from "terra-draw";
@@ -59,6 +60,13 @@ function App() {
     const terradraw = new TerraDraw({
       adapter: new TerraDrawMapLibreGLAdapter({ map }),
       modes: [
+        new TerraDrawRenderMode({
+          modeName: "snapped-routes",
+          styles: {
+            lineStringColor: "rgba(1,35,1,1)",
+            lineStringWidth: 5,
+          },
+        }),
         new TerraDrawLineStringMode({}),
         new TerraDrawSelectMode({
           keyEvents: {
