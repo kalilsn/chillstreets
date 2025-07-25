@@ -1,24 +1,39 @@
-import { memo } from "react";
-import type { GeoJSONStoreFeatures } from "terra-draw";
+import { memo, useId, useState } from "react";
+import { Button } from "./ui/button";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+
+type Mode = "linestring" | "select";
 
 type Props = {
-  routes: GeoJSONStoreFeatures[];
-  changeMode: (mode: "linestring" | "select") => void;
+  save: () => Promise<void>;
+  changeMode: (mode: Mode) => void;
 };
 
-function ControlPanel({ routes, changeMode }: Props) {
+function ControlPanel({ changeMode, save }: Props) {
+  const [mode, setMode] = useState<Mode>("linestring");
+  const toggleGroupId = useId();
+
   return (
     <div className="control-panel">
-      <h3>Routes</h3>
-      <div>
-        {routes.map((route) => (
-          <pre>{JSON.stringify(route, null, 2)}</pre>
-        ))}
-      </div>
-      <div>
-        <button onClick={() => changeMode("linestring")}>Draw</button>
-        <button onClick={() => changeMode("select")}>Select</button>
-      </div>
+      <p>Right click to delete a coordinate</p>
+      <ToggleGroup
+        id={toggleGroupId}
+        type="single"
+        value={mode}
+        variant="outline"
+        onValueChange={(mode: Mode) => {
+          setMode(mode);
+          changeMode(mode);
+        }}
+        className="my-2"
+      >
+        <ToggleGroupItem value="linestring">Draw</ToggleGroupItem>
+        <ToggleGroupItem value="select">Select</ToggleGroupItem>
+      </ToggleGroup>
+
+      <Button variant="default" onClick={save}>
+        Save routes
+      </Button>
     </div>
   );
 }
