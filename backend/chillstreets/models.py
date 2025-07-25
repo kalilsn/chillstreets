@@ -42,6 +42,16 @@ class Edge(models.Model):
     class Meta:
         managed = True
         db_table = 'chicago_ways'
+    
+    @classmethod
+    def fix_oneways():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE chicago_ways SET one_way = 2, oneway = 'NO', reverse_cost = cost "
+		        "FROM osm_ways "
+		        "WHERE osm_ways.osm_id = chicago_ways.osm_id "
+		        "AND osm_ways.tags @> 'oneway:bicycle => no "
+            )
 
 
 class Way(models.Model):
