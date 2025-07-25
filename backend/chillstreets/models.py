@@ -62,7 +62,7 @@ class Way(models.Model):
         db_table = 'osm_ways'
 
 class UserRoute(models.Model):
-    id = models.UUIDField(primary_key=True)
+    id = models.TextField(primary_key=True)
     original_geometry = gis_models.LineStringField()
     snapped_geometry = gis_models.LineStringField()
     class Meta:
