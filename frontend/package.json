@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-openapi-schema": "pushd .. && docker compose run backend uv run python manage.py export_openapi_schema > frontend/openapi-schema.json && popd",
+    "generate-openapi-schema": "docker compose -f ../docker-compose.yml run backend uv run python manage.py export_openapi_schema > openapi-schema.json",
     "generate-api-client": "npm run generate-openapi-schema && openapi-ts"
   },
   "dependencies": {

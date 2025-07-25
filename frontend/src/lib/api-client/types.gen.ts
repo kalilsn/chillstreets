@@ -16,65 +16,59 @@ export type RouteChanges = {
     deleted: Array<string>;
 };
 
-export type ChillstreetsUrlsRoutesData = {
+/**
+ * Route
+ */
+export type Route = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Geometry
+     */
+    geometry: string;
+};
+
+export type GetRoutesData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/routes';
 };
 
-export type ChillstreetsUrlsRoutesResponses = {
+export type GetRoutesResponses = {
     /**
+     * Response
      * OK
      */
-    200: unknown;
+    200: Array<Route>;
 };
 
-export type ChillstreetsUrlsSaveData = {
+export type GetRoutesResponse = GetRoutesResponses[keyof GetRoutesResponses];
+
+export type SaveRouteChangesData = {
     body: RouteChanges;
     path?: never;
     query?: never;
     url: '/api/routes';
 };
 
-export type ChillstreetsUrlsSaveResponses = {
+export type SaveRouteChangesResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type ChillstreetsUrlsSnapData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Source
-         */
-        source: string;
-        /**
-         * Dest
-         */
-        dest: string;
-    };
-    url: '/api/snap';
-};
-
-export type ChillstreetsUrlsSnapResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type ChillstreetsUrlsHealthData = {
+export type HealthData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/health';
 };
 
-export type ChillstreetsUrlsHealthResponses = {
+export type HealthResponses = {
     /**
      * OK
      */

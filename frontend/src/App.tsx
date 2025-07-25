@@ -12,7 +12,8 @@ import {
 } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import type { MapLibreEvent } from "maplibre-gl";
-import { chillstreetsUrlsRoutes } from "./lib/api-client";
+import { getRoutes } from "./lib/api-client";
+import { client } from "./lib/api-client/client.gen";
 
 function App() {
   const [draw, setDraw] = useState<undefined | TerraDraw>();
@@ -23,19 +24,19 @@ function App() {
   // Fetch stored routes from backend
   useEffect(() => {
     const fetchRoutes = async () => {
-      const { data } = await chillstreetsUrlsRoutes({
-        baseUrl: "http://localhost:8000",
+      const { data: routes } = await getRoutes({
+        client,
       });
-      const routes = JSON.parse(data);
+
       if (Array.isArray(routes)) {
         setInitialRoutes(
-          routes.map(({ geometry, ...route }: { geometry: string }) => ({
+          routes.map(({ geometry, ...route }) => ({
             // We're only storing the geometry in the db at the moment, so we lose the geojson
             // properties when saving. In order for terradraw to render these features, we need to
             // specify a mode property that is supported by our terradraw instance
             properties: { mode: "linestring" },
-            geometry: JSON.parse(geometry),
             type: "Feature" as const,
+            geometry: JSON.parse(geometry),
             ...route,
           }))
         );

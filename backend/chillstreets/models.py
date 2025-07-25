@@ -79,7 +79,7 @@ class UserRoute(models.Model):
                 ON CONFLICT ("id") DO UPDATE
                 SET original_geometry = EXCLUDED."original_geometry"
             """, snapped_routes)
-            return 200
+            return
 
     @classmethod
     def get_routes(cls):
@@ -90,7 +90,7 @@ class UserRoute(models.Model):
             """)
 
             rows = fetchall(cursor)
-            return json.dumps(rows, cls=DjangoJSONEncoder)
+            return rows
 
 
 class MellowRoute(models.Model):

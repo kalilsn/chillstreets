@@ -2,17 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { TerraDraw } from "terra-draw";
 
 import ControlPanel from "./ControlPanel";
-import type { FeatureId } from "node_modules/terra-draw/dist/store/store";
-import { chillstreetsUrlsSave } from "@/lib/api-client";
 import type { OnChangeContext } from "node_modules/terra-draw/dist/common";
+import { saveRouteChanges } from "@/lib/api-client";
+import { client } from "@/lib/api-client/client.gen";
 type TerraDrawChangeType = "create" | "update" | "delete" | "styling";
 
 function RouteEditor({ draw }: { draw: TerraDraw }) {
-  const [updated, setUpdated] = useState<FeatureId[]>([]);
-  const [deleted, setDeleted] = useState<FeatureId[]>([]);
+  const [updated, setUpdated] = useState<string[]>([]);
+  const [deleted, setDeleted] = useState<string[]>([]);
 
   const handleChange = useCallback(
-    (ids: FeatureId[], type: TerraDrawChangeType, context: OnChangeContext) => {
+    (ids: string[], type: TerraDrawChangeType, context: OnChangeContext) => {
       if (context && context.origin === "api") {
         // Ignore programmatic changes to data (such as adding the initial routes)
         return;
@@ -44,7 +44,7 @@ function RouteEditor({ draw }: { draw: TerraDraw }) {
     return () => {
       if (draw) {
         // @ts-expect-error the library's FeatureId type is broader than needed
-        draw.off("change", handleChange);
+        draw.off<"change">("change", handleChange);
       }
     };
   }, [draw, handleChange]);
@@ -66,7 +66,6 @@ function RouteEditor({ draw }: { draw: TerraDraw }) {
     for (const featureId of updated) {
       const snapshot = draw.getSnapshotFeature(featureId);
       if (snapshot) {
-        console.log("snapshot", snapshot);
         hydratedUpdates[featureId] = JSON.stringify(snapshot.geometry);
       }
     }
@@ -76,10 +75,9 @@ function RouteEditor({ draw }: { draw: TerraDraw }) {
       deleted,
     });
 
-    await chillstreetsUrlsSave({
-      // @ts-expect-error FeatureId issue once again. It's a string!
+    await saveRouteChanges({
+      client,
       body: { updated: hydratedUpdates, deleted },
-      baseUrl: "http://localhost:8000",
     });
 
     // Clear out the state
