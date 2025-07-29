@@ -35,25 +35,14 @@ class Command(BaseCommand):
 
         print("inserting osm data to postgres")
         osm2pgrouting_config = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), 
+            os.path.dirname(os.path.realpath(__file__)),
             "mapconfig_for_bicycles.xml"
         )
         osm2pgrouting = sh.Command("osm2pgrouting")
         osm2pgrouting(f=stripped_osm_file.name, c=osm2pgrouting_config,
-                      prefix="chicago_", addnodes=True, tags=True, clean=False,
+                      prefix="chicago_", addnodes=True, tags=True, clean=True,
                       d=db["NAME"], U=db["USER"], W=db["PASSWORD"], h=db["HOST"], p=db["PORT"],
                       _out=sys.stdout, _err=sys.stderr)
 
         print("updating costs for counterflow lanes")
         Edge.fix_oneways()
-
-
-        # Recalculate routes
-        # We can add an additional geometry column to the user_routes table for old/new snapped geometry
-        # After this process, we move new -> old, and update new. We can then use another table
-        # with a fk to user_routes to store notices for the specific route anywhere we updated
-        # the ways.
-        #
-        # If we keep the routes table with just original_geometry and snapped_geometry we can
-        # calculate the equivalent ways as a materialized view ("osm_id", "user_route_id")
-        # which we then refresh at this point. The materialized view is what's actually used for routing
