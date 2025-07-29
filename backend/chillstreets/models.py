@@ -44,12 +44,15 @@ class Edge(models.Model):
         db_table = 'chicago_ways'
     
     @classmethod
-    def fix_oneways():
+    def fix_oneways(cls):
+        """
+        Set reverse_cost = cost for ways with bicycle counterflow lanes
+        """
         with connection.cursor() as cursor:
             cursor.execute(
-                "UPDATE chicago_ways SET one_way = 2, oneway = 'NO', reverse_cost = cost "
+                f"UPDATE {cls._meta.db_table} SET one_way = 2, oneway = 'NO', reverse_cost = cost "
 		        "FROM osm_ways "
-		        "WHERE osm_ways.osm_id = chicago_ways.osm_id "
+		        f"WHERE osm_ways.osm_id = {cls._meta.db_table}.osm_id "
 		        "AND osm_ways.tags @> 'oneway:bicycle => no "
             )
 
