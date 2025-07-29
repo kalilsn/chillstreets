@@ -53,7 +53,7 @@ class Edge(models.Model):
                 f"UPDATE {cls._meta.db_table} SET one_way = 2, oneway = 'NO', reverse_cost = cost "
 		        "FROM osm_ways "
 		        f"WHERE osm_ways.osm_id = {cls._meta.db_table}.osm_id "
-		        "AND osm_ways.tags @> 'oneway:bicycle => no "
+		        "AND osm_ways.tags @> 'oneway:bicycle => no'"
             )
 
 
