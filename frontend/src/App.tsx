@@ -145,7 +145,7 @@ function App() {
             },
             styles: {},
             flags: {
-              linestring: {
+              routesnap: {
                 feature: {
                   draggable: true,
                   coordinates: {

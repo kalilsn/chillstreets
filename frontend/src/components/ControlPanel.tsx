@@ -11,7 +11,7 @@ type Props = {
 };
 
 function ControlPanel({ changeMode, save }: Props) {
-  const [mode, setMode] = useState<Mode>("routesnap");
+  const [mode, setMode] = useState<Mode>("select");
   const [zoom, setZoom] = useState<number | undefined>();
   const toggleGroupId = useId();
 
