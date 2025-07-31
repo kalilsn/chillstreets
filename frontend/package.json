@@ -28,7 +28,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
     "terra-draw": "^1.9.0",
-    "terra-draw-maplibre-gl-adapter": "^1.1.1"
+    "terra-draw-maplibre-gl-adapter": "^1.1.1",
+    "terra-route": "^0.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

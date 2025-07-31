@@ -50,7 +50,7 @@ function RouteEditor({ draw }: { draw: TerraDraw }) {
   }, [draw, handleChange]);
 
   const changeMode = useCallback(
-    (mode: "linestring" | "select") => {
+    (mode: "routesnap" | "select") => {
       if (draw) {
         draw.setMode(mode);
       }
@@ -65,12 +65,13 @@ function RouteEditor({ draw }: { draw: TerraDraw }) {
     const hydratedUpdates: Record<string, string> = {};
     for (const featureId of updated) {
       const snapshot = draw.getSnapshotFeature(featureId);
-      if (snapshot) {
+      if (snapshot && snapshot.geometry.type === "LineString") {
         hydratedUpdates[featureId] = JSON.stringify(snapshot.geometry);
       }
     }
 
     console.log("saving changes: ", {
+      hydratedUpdates,
       updated,
       deleted,
     });

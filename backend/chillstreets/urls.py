@@ -18,6 +18,7 @@ from typing import Literal
 from django.contrib import admin
 from django.db import connection
 from django.urls import path
+from django.http import HttpResponse
 from ninja import NinjaAPI, Schema
 from ninja.errors import ValidationError
 from chillstreets.models import UserRoute
@@ -51,8 +52,8 @@ def routes(request):
 async def health(request):
     return "👍"
 
-@api.get("/routes/{z}/{x}/{y}")
-async def routes(request, z: int, x: int, y: int):
+@api.get("/ways/{z}/{x}/{y}", operation_id="getWaysTile")
+def ways(request, z: int, x: int, y: int):
     if tile_err_msg := validate_tile(z, x, y):
         raise ValidationError(tile_err_msg)
 
@@ -65,7 +66,9 @@ async def routes(request, z: int, x: int, y: int):
         cursor.execute(sql, params)
         # TODO: Set content type header:
         # application/vnd.mapbox-vector-tile
-        return cursor.fetchone()[0]
+        result = cursor.fetchone()[0]
+
+    return HttpResponse(result, content_type="application/vnd.mapbox-vector-tile")
 
 def validate_tile(z: int, x: int, y: int) -> str | None:
     min_size, max_size = 0, (2 ** (z - 1))
@@ -111,13 +114,13 @@ def get_tile_query(z: int, x: int, y: int) -> tuple[str, dict]:
                 SELECT
                     ST_Segmentize(
                         ST_MakeEnvelope(
-                            {xmin},
-                            {ymin},
-                            {xmax},
-                            {ymax},
+                            %(xmin)s,
+                            %(ymin)s,
+                            %(xmax)s,
+                            %(ymax)s,
                             3857
                         ),
-                        {seg_size}
+                        %(seg_size)s
                     ) AS geom
             ) AS envelope
         ),
@@ -125,13 +128,12 @@ def get_tile_query(z: int, x: int, y: int) -> tuple[str, dict]:
         mvtgeom AS (
             SELECT
                 ST_AsMVTGeom(
-                    ST_Transform(routes.geom, 3857),
+                    ST_Transform("chicago_ways".the_geom, 3857),
                     bounds.b2d
-                ) AS geom,
-                type
-            FROM routes
+                ) AS geom
+            FROM "chicago_ways"
             INNER JOIN bounds
-                ON ST_Intersects(ST_Transform(routes.geom, 3857), bounds.geom))
+                ON ST_Intersects(ST_Transform("chicago_ways".the_geom, 3857), bounds.geom)
         )
 
         SELECT ST_AsMVT(mvtgeom.*) FROM mvtgeom
@@ -142,6 +144,7 @@ def get_tile_query(z: int, x: int, y: int) -> tuple[str, dict]:
         "xmax": xmax,
         "ymin": ymin,
         "ymax": ymax,
+        "seg_size": seg_size
     }
 
     return sql, params
