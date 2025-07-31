@@ -1,4 +1,4 @@
-// Adapted from https://github.com/mourner/kdbush
+// Adapted by James Milner from https://github.com/mourner/kdbush 
 
 // ISC License
 
