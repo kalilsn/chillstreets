@@ -54,6 +54,9 @@ async def health(request):
 
 @api.get("/ways/{z}/{x}/{y}", operation_id="getWaysTile")
 def ways(request, z: int, x: int, y: int):
+    """Given a zoom level and tile XY coordinates, return a map vector tile
+    containing all OSM ways in the tile bounding box. Adapted from:
+    https://www.crunchydata.com/blog/dynamic-vector-tiles-from-postgis"""
     if tile_err_msg := validate_tile(z, x, y):
         raise ValidationError(tile_err_msg)
 
