@@ -64,8 +64,6 @@ def ways(request, z: int, x: int, y: int):
 
     with connection.cursor() as cursor:
         cursor.execute(sql, params)
-        # TODO: Set content type header:
-        # application/vnd.mapbox-vector-tile
         result = cursor.fetchone()[0]
 
     return HttpResponse(result, content_type="application/vnd.mapbox-vector-tile")
