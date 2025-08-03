@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
 RUN apt update && apt-get install -y \
-    binutils libproj-dev gdal-bin netcat-traditional
+    binutils libproj-dev gdal-bin netcat-traditional osm2pgrouting osmctools
 
 COPY pyproject.toml uv.lock /_lock/
 

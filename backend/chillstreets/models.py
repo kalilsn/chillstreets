@@ -42,6 +42,20 @@ class Edge(models.Model):
     class Meta:
         managed = True
         db_table = 'chicago_ways'
+    
+    @classmethod
+    def fix_oneways(cls):
+        """
+        Fix costs and one-way indicators for ways with bicycle contraflow lanes so that
+        pgrouting knows to use them
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE {cls._meta.db_table} SET one_way = 2, oneway = 'NO', reverse_cost = cost "
+		        "FROM osm_ways "
+		        f"WHERE osm_ways.osm_id = {cls._meta.db_table}.osm_id "
+		        "AND osm_ways.tags @> 'oneway:bicycle => no'"
+            )
 
 
 class Way(models.Model):
