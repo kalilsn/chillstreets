@@ -46,7 +46,8 @@ class Edge(models.Model):
     @classmethod
     def fix_oneways(cls):
         """
-        Set reverse_cost = cost for ways with bicycle counterflow lanes
+        Fix costs and one-way indicators for ways with bicycle contraflow lanes so that
+        pgrouting knows to use them
         """
         with connection.cursor() as cursor:
             cursor.execute(
