@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./App.css";
 
 import RouteEditor from "./components/RouteEditor";
+import IntersectionViewer from "./components/IntersectionViewer";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   TerraDraw,
@@ -36,6 +37,7 @@ function App() {
   const [initialRoutes, setInitialRoutes] = useState<
     GeoJSONStoreFeatures[] | null
   >(null);
+  const [showIntersections, setShowIntersections] = useState(false);
 
   // Fetch stored routes from backend
   useEffect(() => {
@@ -166,6 +168,7 @@ function App() {
     [draw, routing]
   );
 
+
   return (
     <MapProvider>
       <Map
@@ -196,8 +199,19 @@ function App() {
             paint={{ "line-opacity": 0 }}
           />
         </Source>
-        {draw && <RouteEditor draw={draw} />}
+        {showIntersections && <IntersectionViewer />}
+        {draw && !showIntersections && <RouteEditor draw={draw} />}
       </Map>
+
+      {/* Toggle button */}
+      <div className="absolute top-4 left-4 bg-white p-2 rounded-lg shadow-md z-10">
+        <button
+          onClick={() => setShowIntersections(!showIntersections)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          {showIntersections ? 'Hide Intersections' : 'Show Intersections'}
+        </button>
+      </div>
     </MapProvider>
   );
 }

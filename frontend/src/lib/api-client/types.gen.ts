@@ -75,6 +75,47 @@ export type HealthResponses = {
     200: unknown;
 };
 
+export type GetRouteOsmIntersectionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/route-osm-intersections';
+};
+
+export type GetRouteOsmIntersectionsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetWaysTileData = {
+    body?: never;
+    path: {
+        /**
+         * Z
+         */
+        z: number;
+        /**
+         * X
+         */
+        x: number;
+        /**
+         * Y
+         */
+        y: number;
+    };
+    query?: never;
+    url: '/api/ways/{z}/{x}/{y}';
+};
+
+export type GetWaysTileResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type ClientOptions = {
     baseUrl: string;
 };

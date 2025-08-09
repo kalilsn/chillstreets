@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import json
+
 from typing import Literal
 from django.contrib import admin
 from django.db import connection
@@ -51,6 +53,98 @@ def routes(request):
 @api.get("/health", operation_id="health")
 async def health(request):
     return "👍"
+
+@api.get("/route-osm-intersections", operation_id="getRouteOsmIntersections")
+def route_osm_intersections(request):
+    """
+    Find spatial intersections between routes of type 'path' and OSM ways
+    within the specified bounding box. Returns GeoJSON with osm_id property.
+    """
+    # Bounding box coordinates: (87.664719,41.912924,-87.601376,41.940720)
+    bbox_west = -87.664719
+    bbox_south = 41.912924
+    bbox_east = -87.601376
+    bbox_north = 41.940720
+
+    sql = """
+        WITH path_routes AS (
+            SELECT
+                type,
+                wkb_geometry as the_geom,
+                ST_Buffer(wkb_geometry::geography, 1, 4)::geometry as the_geom_buffer
+            FROM routes
+            WHERE type = 'path'
+        ),
+        bbox_ways AS (
+            SELECT osm_id, the_geom
+            FROM osm_ways
+            WHERE the_geom && ST_MakeEnvelope(%(bbox_west)s, %(bbox_south)s, %(bbox_east)s, %(bbox_north)s, 4326)
+        ),
+        intersections AS (
+            SELECT
+                bw.osm_id,
+                bw.the_geom as geom,
+                (
+                    ST_Length(
+                        ST_Intersection(pr.the_geom_buffer, bw.the_geom)
+                    )::double precision
+                    /
+                    ST_Length(bw.the_geom)
+                ) as intersection_proportion
+            FROM path_routes pr
+            JOIN bbox_ways bw
+            ON ST_DWithin(pr.the_geom::geography, bw.the_geom::geography, 1)
+            AND ST_Intersects(pr.the_geom_buffer, bw.the_geom)
+        ),
+        non_intersecting AS (
+            SELECT
+                NULL::bigint as osm_id,
+                the_geom AS geom,
+                NULL::double precision as intersection_proportion
+            FROM path_routes pr
+        ),
+        all_segments AS (
+            SELECT osm_id, geom, intersection_proportion FROM intersections WHERE intersection_proportion > 0.2
+            UNION ALL
+            SELECT osm_id, geom, intersection_proportion FROM non_intersecting
+        )
+        SELECT
+            'Feature' as type,
+            ST_AsGeoJSON(geom) as geometry,
+            json_build_object(
+                'osm_id', osm_id,
+                'intersection_proportion', intersection_proportion
+            ) as properties
+        FROM all_segments
+        WHERE geom IS NOT NULL
+        AND NOT ST_IsEmpty(geom)
+    """
+
+    params = {
+        'bbox_west': bbox_west,
+        'bbox_south': bbox_south,
+        'bbox_east': bbox_east,
+        'bbox_north': bbox_north
+    }
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+    # Build GeoJSON response
+    features = []
+    for row in rows:
+        feature = {
+            'type': row[0],
+            'geometry': json.loads(row[1]) if row[1] else None,
+            'properties': row[2] if row[2] else {'osm_id': None, 'intersection_proportion': None}
+        }
+        features.append(feature)
+
+    return {
+        'type': 'FeatureCollection',
+        'features': features
+    }
 
 @api.get("/ways/{z}/{x}/{y}", operation_id="getWaysTile")
 def ways(request, z: int, x: int, y: int):
